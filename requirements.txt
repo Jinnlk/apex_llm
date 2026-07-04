@@ -1,0 +1,9 @@
+langchain
+langchain-community
+langchain-voyageai
+langchain-anthropic
+faiss-cpu
+rank_bm25
+pdfplumber
+python-dotenv
+tiktoken
