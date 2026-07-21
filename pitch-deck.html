@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Apex Guide QA — Pitch Deck</title>
+<style>
+  :root{
+    --cloud-white:#FFFFFF;
+    --sky-mist:#F4F9FE;
+    --pale-sky:#D8EDFF;
+    --sf-blue:#0176D3;
+    --deep-navy:#032D60;
+    --slate:#3E3E3C;
+    --success:#04844B;
+    --alert:#C23934;
+    --term-bg:#0B1F3A;
+    --term-text:#BFE3FF;
+    --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;height:100%;
+    background:var(--cloud-white);
+    color:var(--slate);
+    font-family:var(--font-sans);
+    overflow:hidden;
+  }
+
+  /* ---------- ambient sky background ---------- */
+  #sky-bg{
+    position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;
+  }
+  #sky-bg .blob{
+    position:absolute;border-radius:50%;filter:blur(80px);opacity:.55;
+    transition:transform 1.2s ease-out;
+  }
+  #sky-bg .blob.b1{width:46vw;height:46vw;left:-12vw;top:-14vw;background:var(--pale-sky);}
+  #sky-bg .blob.b2{width:38vw;height:38vw;right:-10vw;top:20vh;background:var(--sky-mist);}
+  #sky-bg .blob.b3{width:30vw;height:30vw;left:20vw;bottom:-16vw;background:var(--pale-sky);opacity:.4;}
+
+  /* ---------- deck / slides ---------- */
+  #deck{position:relative;height:100vh;width:100vw;z-index:1;}
+  .slide{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    padding:6vh 8vw;
+    opacity:0;transform:translateY(16px);
+    pointer-events:none;
+    transition:opacity .42s ease-out, transform .42s ease-out;
+  }
+  .slide.prev-of{transform:translateY(-16px);}
+  .slide.active{opacity:1;transform:translateY(0);pointer-events:auto;}
+  @media (prefers-reduced-motion: reduce){
+    .slide{transition:opacity .2s linear;transform:none !important;}
+  }
+
+  .slide-inner{width:100%;max-width:1200px;margin:0 auto;}
+
+  .kicker{
+    font-family:var(--font-mono);
+    font-size:.78rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--sf-blue);
+    font-weight:700;
+    margin-bottom:1.1rem;
+  }
+  h1.headline{
+    font-size:clamp(2.2rem,4.6vw,4rem);
+    line-height:1.08;
+    font-weight:800;
+    color:var(--deep-navy);
+    margin:0 0 1rem 0;
+    letter-spacing:-.01em;
+  }
+  h2.subhead{
+    font-size:clamp(1.05rem,1.6vw,1.35rem);
+    font-weight:500;
+    color:var(--slate);
+    margin:0 0 1.6rem 0;
+    line-height:1.5;
+  }
+  p.body-copy{font-size:1.05rem;line-height:1.65;margin:0 0 .6rem 0;}
+  .byline{font-family:var(--font-mono);font-size:.85rem;color:var(--deep-navy);opacity:.7;}
+
+  ul.bullets{margin:0;padding:0;list-style:none;}
+  ul.bullets li{
+    position:relative;padding-left:1.4rem;margin-bottom:.7rem;
+    font-size:1.02rem;line-height:1.55;color:var(--slate);
+  }
+  ul.bullets li::before{
+    content:"›";position:absolute;left:0;color:var(--sf-blue);font-weight:800;
+  }
+
+  .framing-line{
+    margin-top:1.4rem;
+    font-weight:700;
+    color:var(--deep-navy);
+    font-size:1.15rem;
+    border-left:3px solid var(--sf-blue);
+    padding-left:.9rem;
+  }
+
+  /* ---------- terminal mockup ---------- */
+  .term-window{
+    background:var(--term-bg);
+    border-radius:14px;
+    box-shadow:0 30px 60px -20px rgba(3,45,96,.45);
+    overflow:hidden;
+    width:100%;max-width:680px;
+  }
+  .term-titlebar{
+    display:flex;gap:6px;align-items:center;
+    padding:10px 14px;background:rgba(255,255,255,.06);
+  }
+  .term-titlebar span{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  .term-titlebar span:nth-child(1){background:#ff5f57;}
+  .term-titlebar span:nth-child(2){background:#febc2e;}
+  .term-titlebar span:nth-child(3){background:#28c840;}
+  .term-body{
+    font-family:var(--font-mono);
+    color:var(--term-text);
+    font-size:.92rem;
+    line-height:1.75;
+    padding:1.3rem 1.5rem 1.6rem;
+    white-space:pre-wrap;
+  }
+  .term-body .prompt{color:#7fb9ff;}
+  .term-body .cursor{
+    display:inline-block;width:.55em;height:1.05em;background:var(--sf-blue);
+    vertical-align:text-bottom;margin-left:2px;
+    animation:blink 1s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0;}}
+  .term-label{
+    font-family:var(--font-mono);font-size:.72rem;letter-spacing:.08em;
+    color:var(--deep-navy);opacity:.55;text-transform:uppercase;margin-top:.6rem;
+  }
+
+  /* ---------- stat / chips ---------- */
+  .stat-big{
+    font-family:var(--font-mono);font-weight:700;color:var(--deep-navy);
+    font-size:clamp(1.6rem,3.4vw,2.6rem);
+    background:var(--sky-mist);
+    border:1px solid var(--pale-sky);
+    border-radius:12px;
+    padding:1.1rem 1.5rem;
+    display:inline-block;
+  }
+  .chip-row{display:flex;flex-wrap:wrap;gap:.6rem;margin:.6rem 0 1.2rem;}
+  .chip{
+    font-family:var(--font-mono);font-size:.85rem;color:var(--deep-navy);
+    background:var(--sky-mist);border:1px solid var(--pale-sky);
+    border-radius:999px;padding:.35rem .9rem;
+  }
+  .caption-italic{font-style:italic;color:var(--slate);opacity:.8;font-size:.95rem;}
+
+  /* ---------- two column layout ---------- */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;width:100%;}
+  @media (max-width:820px){.two-col{grid-template-columns:1fr;}}
+
+  /* page silhouette (slide 2) */
+  .page-stack{position:relative;width:180px;height:220px;margin:0 auto;}
+  .page-stack .pg{
+    position:absolute;background:var(--cloud-white);border:2px solid var(--pale-sky);
+    border-radius:8px;width:160px;height:200px;box-shadow:0 10px 24px -12px rgba(3,45,96,.25);
+  }
+  .page-stack .pg:nth-child(1){transform:rotate(-6deg);left:0;top:14px;}
+  .page-stack .pg:nth-child(2){transform:rotate(3deg);left:14px;top:6px;}
+  .page-stack .pg:nth-child(3){left:8px;top:0;border-color:var(--sf-blue);}
+  .page-stack .pg .lines{padding:16px;}
+  .page-stack .pg .lines div{height:6px;border-radius:3px;background:var(--pale-sky);margin-bottom:8px;}
+  .page-stack .pg .lines div:nth-child(3){width:60%;}
+  .search-cursor{
+    position:absolute;right:-10px;bottom:-10px;
+    width:34px;height:34px;border-radius:50%;background:var(--sf-blue);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;
+    box-shadow:0 8px 18px -6px rgba(1,118,211,.6);
+  }
+
+  /* ---------- diagram (slide 4) ---------- */
+  .diagram{width:100%;}
+  .diag-lane-label{font-family:var(--font-mono);font-size:.7rem;color:var(--deep-navy);opacity:.55;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem;}
+  .diag-row{display:flex;align-items:center;justify-content:center;gap:.8rem;flex-wrap:wrap;}
+  .node{
+    font-family:var(--font-mono);font-size:.82rem;color:var(--deep-navy);
+    background:var(--sky-mist);border:1.5px solid var(--pale-sky);border-radius:12px;
+    padding:.65rem 1rem;text-align:center;line-height:1.4;min-width:150px;
+  }
+  .node.strong{border-color:var(--sf-blue);background:#eaf4ff;font-weight:700;}
+  .node.gate{background:var(--deep-navy);color:#fff;border-color:var(--deep-navy);font-weight:700;}
+  .node.answer{background:var(--success);color:#fff;border-color:var(--success);}
+  .node.refuse{background:var(--alert);color:#fff;border-color:var(--alert);}
+  .arrow-down{font-size:1.3rem;color:var(--sf-blue);text-align:center;line-height:1;margin:.15rem 0;}
+  .arrow-right{font-size:1.3rem;color:var(--sf-blue);}
+  .diag-fork{display:flex;gap:1.4rem;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:.3rem;}
+  .diag-source-row{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;}
+
+  /* ---------- guardrail gate bars (slide 5) ---------- */
+  .gate-bar{
+    display:flex;align-items:center;gap:1rem;
+    background:var(--sky-mist);border:1px solid var(--pale-sky);border-radius:14px;
+    padding:1rem 1.3rem;margin-bottom:1rem;
+  }
+  .gate-icon{
+    width:46px;height:46px;border-radius:10px;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.3rem;font-weight:800;
+    background:var(--deep-navy);
+  }
+  .gate-text b{color:var(--deep-navy);}
+  .gate-text{font-size:.95rem;line-height:1.5;}
+
+  .numberline{position:relative;height:64px;margin-top:1.3rem;}
+  .numberline .track{position:absolute;left:0;right:0;top:28px;height:6px;background:var(--pale-sky);border-radius:3px;}
+  .numberline .band{position:absolute;top:24px;height:14px;border-radius:7px;}
+  .numberline .band.off{background:var(--alert);opacity:.35;}
+  .numberline .band.on{background:var(--sf-blue);opacity:.4;}
+  .numberline .marker{position:absolute;top:8px;width:2px;height:48px;background:var(--deep-navy);}
+  .numberline .marker::after{
+    content:"threshold 0.30";position:absolute;top:-22px;left:50%;transform:translateX(-50%);
+    font-family:var(--font-mono);font-size:.68rem;color:var(--deep-navy);white-space:nowrap;font-weight:700;
+  }
+  .numberline .tag{position:absolute;top:46px;font-family:var(--font-mono);font-size:.68rem;color:var(--slate);}
+
+  /* ---------- tradeoff cards (slide 6) ---------- */
+  .tradeoff-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;width:100%;}
+  @media (max-width:820px){.tradeoff-grid{grid-template-columns:1fr;}}
+  .tcard{border-radius:14px;overflow:hidden;box-shadow:0 14px 30px -18px rgba(3,45,96,.35);}
+  .tcard .rejected{
+    background:#fbeceb;color:var(--alert);padding:.7rem 1rem;font-size:.85rem;
+    text-decoration:line-through;text-decoration-thickness:1.5px;
+  }
+  .tcard .chosen{
+    background:var(--sf-blue);color:#fff;padding:.85rem 1rem 1rem;font-size:.9rem;line-height:1.5;
+  }
+  .tcard .chosen b{display:block;font-size:.7rem;letter-spacing:.08em;opacity:.85;margin-bottom:.25rem;text-transform:uppercase;}
+  .tcard .label{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;opacity:.8;display:block;margin-bottom:.15rem;}
+
+  /* ---------- stepper (slides 7/8) ---------- */
+  .stepper{display:flex;align-items:center;gap:.4rem;margin:1rem 0 1.3rem;}
+  .stepper .dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-mono);font-size:.8rem;font-weight:700;color:#fff;background:var(--pale-sky);}
+  .stepper .dot.lit{background:var(--sf-blue);}
+  .stepper .dot.stop{background:var(--alert);}
+  .stepper .seg{width:22px;height:3px;background:var(--pale-sky);}
+  .stepper .seg.lit{background:var(--sf-blue);}
+
+  .question-quote{
+    font-size:1.15rem;font-weight:700;color:var(--deep-navy);
+    background:var(--sky-mist);border-left:4px solid var(--sf-blue);
+    padding:.8rem 1.1rem;border-radius:0 10px 10px 0;margin-bottom:1rem;
+  }
+
+  /* ---------- matrix (slide 9) ---------- */
+  .matrix{width:100%;border-collapse:separate;border-spacing:8px;}
+  .matrix td, .matrix th{
+    border-radius:10px;padding:.9rem 1rem;font-size:.88rem;line-height:1.5;vertical-align:top;
+  }
+  .matrix th{background:var(--deep-navy);color:#fff;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;}
+  .matrix td.pass{background:#e7f6ee;border:1px solid var(--success);}
+  .matrix td.fail{background:#fbeceb;border:1px solid var(--alert);}
+  .matrix td.mixed{background:var(--sky-mist);border:1px dashed var(--sf-blue);}
+  .matrix td b{display:block;color:var(--deep-navy);margin-bottom:.2rem;}
+
+  /* ---------- impact tiles (slide 10) ---------- */
+  .impact-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;width:100%;}
+  @media (max-width:820px){.impact-grid{grid-template-columns:1fr;}}
+  .tile{border-radius:14px;padding:1.1rem 1.3rem;font-size:.92rem;line-height:1.55;}
+  .tile.solid{background:var(--sf-blue);color:#fff;}
+  .tile.dashed{background:var(--sky-mist);border:2px dashed var(--sf-blue);color:var(--slate);}
+  .tile .tag{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;opacity:.85;display:block;margin-bottom:.4rem;}
+
+  /* ---------- closing ---------- */
+  .ask-list{display:flex;flex-direction:column;gap:.65rem;margin:1rem 0 1.4rem;}
+  .ask-list .item{display:flex;gap:.9rem;align-items:baseline;font-size:1.02rem;}
+  .ask-list .item b{color:var(--sf-blue);font-family:var(--font-mono);flex:0 0 auto;min-width:82px;white-space:nowrap;}
+  .footer-note{font-size:.8rem;color:var(--slate);opacity:.65;line-height:1.6;margin-top:1.4rem;}
+  .contact-line{font-family:var(--font-mono);font-size:1rem;color:var(--deep-navy);font-weight:700;margin-top:.4rem;}
+
+  /* ---------- nav chrome ---------- */
+  #progress-bar{position:fixed;top:0;left:0;height:3px;background:var(--sf-blue);z-index:10;transition:width .3s ease;}
+  #counter{
+    position:fixed;top:18px;right:22px;z-index:10;
+    font-family:var(--font-mono);font-size:.78rem;color:var(--deep-navy);opacity:.65;
+  }
+  #dots{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10;
+    display:flex;gap:7px;
+  }
+  #dots .d{width:8px;height:8px;border-radius:4px;background:var(--pale-sky);transition:all .25s ease;cursor:pointer;}
+  #dots .d.on{background:var(--sf-blue);width:22px;}
+  .nav-btn{
+    position:fixed;top:50%;transform:translateY(-50%);z-index:10;
+    background:rgba(255,255,255,.7);border:1px solid var(--pale-sky);color:var(--sf-blue);
+    width:38px;height:38px;border-radius:50%;font-size:1.1rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    backdrop-filter:blur(4px);
+  }
+  .nav-btn:hover{background:var(--sky-mist);}
+  #prev-btn{left:16px;} #next-btn{right:16px;}
+</style>
+</head>
+<body>
+
+<div id="sky-bg">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
+
+<div id="progress-bar"></div>
+<div id="counter">01 / 11</div>
+<button class="nav-btn" id="prev-btn" aria-label="Previous slide">‹</button>
+<button class="nav-btn" id="next-btn" aria-label="Next slide">›</button>
+<div id="dots"></div>
+
+<div id="deck">
+
+  <!-- 1. TITLE -->
+  <section class="slide" data-index="0">
+    <div class="slide-inner" style="text-align:center;display:flex;flex-direction:column;align-items:center;">
+      <div class="kicker">APEX GUIDE QA</div>
+      <h1 class="headline">Apex Guide QA</h1>
+      <h2 class="subhead">A terminal RAG agent for the Salesforce Apex Developer Guide</h2>
+      <div class="term-window" style="margin-top:1.2rem;">
+        <div class="term-titlebar"><span></span><span></span><span></span></div>
+        <div class="term-body">Apex Developer Guide QA Agent
+Ask a question about Apex. Type 'exit' or 'quit' to stop.
+
+<span class="prompt">&gt;</span> <span class="cursor"></span></div>
+      </div>
+      <div class="byline" style="margin-top:1.2rem;">Jinn Lim · solo MVP · built July 2026</div>
+    </div>
+  </section>
+
+  <!-- 2. PROBLEM -->
+  <section class="slide" data-index="1">
+    <div class="slide-inner">
+      <div class="kicker">02 — Problem</div>
+      <h1 class="headline">821 pages. One PDF.<br/>No search that understands Apex.</h1>
+      <div class="two-col" style="margin-top:1.6rem;">
+        <div>
+          <div class="stat-big">821 pages / ~680K tokens</div>
+          <ul class="bullets" style="margin-top:1.4rem;">
+            <li>The Apex Developer Guide is the canonical reference — shipped as a single monolithic PDF.</li>
+            <li>Real answers cross-reference each other ("see X on page Y") across sections written independently.</li>
+            <li>Ctrl+F finds keywords. It doesn't find explanations, and it doesn't know when it's wrong.</li>
+          </ul>
+          <div class="framing-line">Not a general chatbot. A grounded specialist that refuses to guess.</div>
+        </div>
+        <div class="page-stack">
+          <div class="pg"><div class="lines"><div></div><div></div><div></div></div></div>
+          <div class="pg"><div class="lines"><div></div><div></div><div></div></div></div>
+          <div class="pg"><div class="lines"><div></div><div></div><div></div></div></div>
+          <div class="search-cursor">?</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. APPROACH SNAPSHOT -->
+  <section class="slide" data-index="2">
+    <div class="slide-inner">
+      <div class="kicker">03 — Approach</div>
+      <h1 class="headline">Hybrid retrieval + two-layer guardrails, grounded entirely in the source PDF</h1>
+      <div class="chip-row">
+        <span class="chip">pdfplumber</span>
+        <span class="chip">voyage-3</span>
+        <span class="chip">FAISS</span>
+        <span class="chip">BM25</span>
+        <span class="chip">claude-sonnet-5</span>
+        <span class="chip">LangChain</span>
+      </div>
+      <p class="caption-italic">Single-file terminal app — no web UI, no database, by design.</p>
+    </div>
+  </section>
+
+  <!-- 4. ARCHITECTURE DIAGRAM -->
+  <section class="slide" data-index="3">
+    <div class="slide-inner">
+      <div class="kicker">04 — Architecture</div>
+      <h1 class="headline" style="font-size:clamp(1.8rem,3.4vw,2.6rem);">The pipeline, exactly as it runs</h1>
+      <p class="caption-italic" style="margin-bottom:1.2rem;">main.py → cli.run() → SectionRouter + HybridRetriever + QAChain → REPL loop → retrieve(question)</p>
+
+      <div class="diagram">
+        <div class="diag-lane-label" style="text-align:center;">three signals feed the fusion step</div>
+        <div class="diag-source-row">
+          <div class="node">BM25<br/>top-20 lexical</div>
+          <div class="node">FAISS<br/>top-20 vector</div>
+          <div class="node">Router<br/>soft section signal</div>
+        </div>
+        <div class="arrow-down">↓ ↓ ↓</div>
+        <div class="diag-row">
+          <div class="node strong">RRF Fusion (0.4 / 0.6, k=60)<br/>+ Section Boost (0.15)</div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="diag-row">
+          <div class="node strong">Top-5 chunks</div>
+        </div>
+        <div class="arrow-down">↓ forks here ↓</div>
+        <div class="diag-fork">
+          <div style="text-align:center;">
+            <div class="node answer">QAChain → Claude → Answer</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="node">FAISS raw score<br/>(single closest chunk, whole corpus)</div>
+            <div class="arrow-down">↓</div>
+            <div class="node gate">Guardrail gate</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. GUARDRAILS ZOOM -->
+  <section class="slide" data-index="4">
+    <div class="slide-inner">
+      <div class="kicker">05 — Guardrails</div>
+      <h1 class="headline" style="font-size:clamp(1.8rem,3.4vw,2.6rem);">Two layers stand between a question and an answer</h1>
+
+      <div class="gate-bar">
+        <div class="gate-icon">L1</div>
+        <div class="gate-text"><b>Pre-LLM · retrieval confidence.</b> absolute_relevance ≥ 0.30, or refuse — the LLM is never called.</div>
+      </div>
+      <div class="gate-bar">
+        <div class="gate-icon" style="background:var(--sf-blue);">L2</div>
+        <div class="gate-text"><b>In-prompt · Claude's own backstop.</b> Answer only from the excerpts, cite pages inline as (p. 42), and say so if they don't actually cover the question.</div>
+      </div>
+
+      <div class="numberline">
+        <div class="track"></div>
+        <div class="band off" style="left:11.25%;width:42.5%;"></div>
+        <div class="band on" style="left:73.75%;width:11.25%;"></div>
+        <div class="marker" style="left:62.5%;"></div>
+        <div class="tag" style="left:11.25%;">off-topic: −0.11 to 0.23</div>
+        <div class="tag" style="left:73.75%;">on-topic: 0.39 to 0.48</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. TRADEOFFS -->
+  <section class="slide" data-index="5">
+    <div class="slide-inner">
+      <div class="kicker">06 — Tradeoffs</div>
+      <h1 class="headline" style="font-size:clamp(1.8rem,3.4vw,2.6rem);">What I chose, and what I rejected</h1>
+      <div class="tradeoff-grid">
+        <div class="tcard">
+          <div class="rejected">✗ LangChain EnsembleRetriever (opaque scoring)</div>
+          <div class="chosen"><b>✓ Chosen — Fusion</b>Hand-rolled weighted RRF (0.4 / 0.6, k=60) — keeps per-candidate scores available for the guardrail and section boost.</div>
+        </div>
+        <div class="tcard">
+          <div class="rejected">✗ Router confidence as a hard first gate</div>
+          <div class="chosen"><b>✓ Chosen — Router's role</b>Soft 0.15 re-ranking boost only — "what's the weather like today?" scored higher than the real question "how do governor limits interact with test methods?"</div>
+        </div>
+        <div class="tcard">
+          <div class="rejected">✗ Fused/normalized retrieval score (top hit always ≈1.0)</div>
+          <div class="chosen"><b>✓ Chosen — Guardrail signal</b>Separate raw, per-query-comparable FAISS score of the single closest chunk in the whole corpus.</div>
+        </div>
+        <div class="tcard">
+          <div class="rejected">✗ Dynamic heading-detection parsing</div>
+          <div class="chosen"><b>✓ Chosen — Section boundaries</b>Hardcoded 6 TOC sections — valid as long as this stays pinned to the Summer '26 edition of the guide.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. USE CASE 1 -->
+  <section class="slide" data-index="6">
+    <div class="slide-inner">
+      <div class="kicker">07 — Use Case · In Scope</div>
+      <h1 class="headline" style="font-size:clamp(1.7rem,3.2vw,2.4rem);">Cited, and answered</h1>
+      <div class="question-quote">"How do governor limits interact with test methods?"</div>
+      <div class="stepper">
+        <div class="dot lit">R</div><div class="seg lit"></div>
+        <div class="dot lit">F</div><div class="seg lit"></div>
+        <div class="dot lit">G</div><div class="seg lit"></div>
+        <div class="dot lit">L1</div><div class="seg lit"></div>
+        <div class="dot lit">L2</div>
+      </div>
+      <ul class="bullets">
+        <li>Router signals both "Running Apex" (governor limits) and "Debugging, Testing, and Deploying Apex" (test methods) — a genuinely cross-section question.</li>
+        <li>Fusion + boost re-ranks; absolute score lands in the real 0.39–0.48 on-topic range and clears 0.30.</li>
+        <li>Claude answers, citing pages inline: (p. 340), (p. 710).</li>
+      </ul>
+      <div class="framing-line">This is exactly why the router became a soft boost, not a hard filter — a hard section gate would have starved this legitimate cross-section question.</div>
+      <div class="term-label">illustrative of citation format — not a captured transcript</div>
+      <div class="term-window" style="margin-top:.4rem;max-width:640px;">
+        <div class="term-titlebar"><span></span><span></span><span></span></div>
+        <div class="term-body">Governor limits reset per test method invocation (p. 340), so
+each @isTest method gets its own limit budget (p. 710).
+
+Source: p. 340, "Running Apex"
+Source: p. 710, "Debugging, Testing, and Deploying Apex"</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. USE CASE 2 -->
+  <section class="slide" data-index="7">
+    <div class="slide-inner">
+      <div class="kicker">08 — Use Case · Out of Scope</div>
+      <h1 class="headline" style="font-size:clamp(1.7rem,3.2vw,2.4rem);">Correctly refused</h1>
+      <div class="question-quote">"What's the weather like today?"</div>
+      <div class="stepper">
+        <div class="dot lit">R</div><div class="seg lit"></div>
+        <div class="dot lit">F</div><div class="seg lit"></div>
+        <div class="dot lit">G</div><div class="seg lit"></div>
+        <div class="dot stop">L1</div><div class="seg"></div>
+        <div class="dot">L2</div>
+      </div>
+      <ul class="bullets">
+        <li>The router actually scores this <i>higher</i> than the real Apex question on slide 7 — proof it can't be trusted as a guardrail on its own.</li>
+        <li>The absolute FAISS score still falls in the real off-topic range (−0.11 to 0.23), below the 0.30 threshold.</li>
+        <li>Layer 1 refuses before any Claude call — no LLM invoked.</li>
+      </ul>
+      <div class="framing-line">Zero LLM cost or latency spent on an obviously out-of-scope question.</div>
+      <div class="term-label">verbatim — this is the real, fixed refusal string</div>
+      <div class="term-window" style="margin-top:.4rem;max-width:640px;">
+        <div class="term-titlebar"><span></span><span></span><span></span></div>
+        <div class="term-body">I can only answer questions about the Apex Developer
+Guide. That question doesn't seem to be covered by it.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. SYNTHESIS MATRIX -->
+  <section class="slide" data-index="8">
+    <div class="slide-inner">
+      <div class="kicker">09 — Synthesis</div>
+      <h1 class="headline" style="font-size:clamp(1.8rem,3.4vw,2.6rem);">How the two layers combine</h1>
+      <table class="matrix">
+        <tr>
+          <th>Layer 1 (retrieval)</th>
+          <th>Layer 2 (Claude)</th>
+          <th>Outcome</th>
+        </tr>
+        <tr>
+          <td class="pass"><b>Pass</b>score ≥ 0.30</td>
+          <td class="pass"><b>Pass</b>excerpts answer it</td>
+          <td class="pass"><b>Cited answer</b>Use Case 1</td>
+        </tr>
+        <tr>
+          <td class="fail"><b>Fail</b>score &lt; 0.30</td>
+          <td class="fail">—<br/>never reached</td>
+          <td class="fail"><b>Immediate refusal</b>no LLM call · Use Case 2</td>
+        </tr>
+        <tr>
+          <td class="pass"><b>Pass</b>weakly relevant</td>
+          <td class="mixed"><b>Fail</b>doesn't actually answer</td>
+          <td class="mixed"><b>Claude says so</b>by design, not separately tested in this deck</td>
+        </tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- 10. IMPACT -->
+  <section class="slide" data-index="9">
+    <div class="slide-inner">
+      <div class="kicker">10 — Impact</div>
+      <h1 class="headline" style="font-size:clamp(1.8rem,3.4vw,2.6rem);">Honest status, not inflated metrics</h1>
+      <div class="impact-grid">
+        <div class="tile solid">
+          <span class="tag">✓ Verified</span>
+          Solo MVP — single commit, no tests, no CI, no users yet.
+        </div>
+        <div class="tile solid">
+          <span class="tag">✓ Verified</span>
+          Corpus (~680K tokens) uses ~0.34% of Voyage's 200M-token free voyage-3 allotment → embedding cost effectively $0.
+        </div>
+        <div class="tile solid">
+          <span class="tag">✓ Verified, caveated</span>
+          Guardrail threshold 0.30 sits in a ~0.16-point gap between on-topic (0.39–0.48) and off-topic (−0.11 to 0.23) — two hand-tested categories, not a benchmark suite.
+        </div>
+        <div class="tile dashed">
+          <span class="tag">◇ Qualitative, no number claimed</span>
+          Collapses a slow, cross-referenced 821-page manual search into one question with page citations to verify — no time-saved figure is claimed, since none was measured.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. CLOSING ASK -->
+  <section class="slide" data-index="10">
+    <div class="slide-inner" style="text-align:center;">
+      <div class="kicker">11 — Closing</div>
+      <h1 class="headline">Ask a real question.</h1>
+      <div class="ask-list" style="align-items:center;text-align:left;max-width:520px;margin-left:auto;margin-right:auto;">
+        <div class="item"><b>Try it</b> — clone, add ANTHROPIC_API_KEY / VOYAGE_API_KEY, ask a real Apex question.</div>
+        <div class="item"><b>Feedback</b> — especially on the hand-tuned retrieval and guardrail thresholds.</div>
+        <div class="item"><b>Talk</b> — open to conversations on applied RAG / agent engineering work.</div>
+      </div>
+      <div class="contact-line">Jinn Lim — jinnsonlim4@gmail.com</div>
+      <div class="footer-note">
+        Known next steps (from the project's own limitations list): migrate off deprecating langchain-community,
+        move toward layout-aware chunking so code blocks survive intact, rescope the git root to apex_llm/.
+      </div>
+      <div style="margin-top:1.6rem;font-family:var(--font-mono);color:var(--sf-blue);font-size:1.3rem;">&gt; <span class="cursor"></span></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var current = 0;
+
+  var dotsEl = document.getElementById('dots');
+  slides.forEach(function(_, i){
+    var d = document.createElement('div');
+    d.className = 'd';
+    d.addEventListener('click', function(){ go(i); });
+    dotsEl.appendChild(d);
+  });
+  var dotEls = Array.prototype.slice.call(dotsEl.children);
+
+  var progressBar = document.getElementById('progress-bar');
+  var counter = document.getElementById('counter');
+
+  function render(){
+    slides.forEach(function(s, i){
+      s.classList.remove('active','prev-of');
+      if (i === current) s.classList.add('active');
+      else if (i < current) s.classList.add('prev-of');
+    });
+    dotEls.forEach(function(d, i){ d.classList.toggle('on', i === current); });
+    progressBar.style.width = ((current + 1) / total * 100) + '%';
+    counter.textContent = String(current + 1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+  }
+
+  function go(i){
+    current = Math.max(0, Math.min(total - 1, i));
+    render();
+  }
+
+  document.getElementById('next-btn').addEventListener('click', function(){ go(current + 1); });
+  document.getElementById('prev-btn').addEventListener('click', function(){ go(current - 1); });
+
+  window.addEventListener('keydown', function(e){
+    if (['ArrowRight','ArrowDown','PageDown',' ','Spacebar'].indexOf(e.key) !== -1){
+      e.preventDefault(); go(current + 1);
+    } else if (['ArrowLeft','ArrowUp','PageUp','Backspace'].indexOf(e.key) !== -1){
+      e.preventDefault(); go(current - 1);
+    } else if (e.key === 'Home'){
+      e.preventDefault(); go(0);
+    } else if (e.key === 'End'){
+      e.preventDefault(); go(total - 1);
+    }
+  });
+
+  var hashN = parseInt(location.hash.replace('#',''), 10);
+  if (!isNaN(hashN)) current = Math.max(0, Math.min(total - 1, hashN));
+
+  render();
+})();
+</script>
+
+</body>
+</html>
